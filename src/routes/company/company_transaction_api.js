@@ -29,7 +29,7 @@ company_transaction_api.get(`${ns}`, company_middleware, async (req, res) => {
     }
 });
 
-// Get Transaction by ID
+
 company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) => {
     try {
         const { txId } = req.params;

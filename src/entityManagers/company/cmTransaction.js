@@ -1,42 +1,30 @@
 import { MODELS } from '../../sequelize.js';
 import { ApiError } from '../../helper/ApiError.js';
+import axios from 'axios';
 
 export class CMTransaction {
 
 
     static async fetchFromExternalSource() {
 
-        // const mockData = [
-        //     {
-        //         "txId": "1213ff6185fe4d3d90ad1d9051119a9ddf923a238dbd4275b7fff00f6d8aa24e",
-        //         "blockHeight": 1028550,
-        //         "blockHash": "3aaee902e5c8f3cd47c6f6382b268a9caa7ca74f73f6c695404dc34fc3ecb6a1",
-        //         "from": "0x4b3633554317829b1ee40034fc97ea6037ec1a84",
-        //         "to": "3f4ac2e2ab05da16af1dfa63ab342337dd2eb2a5",
-        //         "contractName": "3f4ac2e2ab05da16af1dfa63ab342337dd2eb2a5",
-        //         "method": "40d097c3",
-        //         "status": "Success",
-        //         "timestamp": 1768372031000,
-        //         "dateTime": "2026-01-14 11:57",
-        //         "gasUsed": 26213
-        //     },
+        try {
+            const url = 'http://localhost:9010/bcexplorer/contract/transactions';
+            const params = {
+                contractName: '3f4ac2e2ab05da16af1dfa63ab342337dd2eb2a5',
+                fromBlock: 1025456,
+                toBlock: 925456
+            };
 
-        //     {
-        //         "txId": "mock_tx_2_older",
-        //         "blockHeight": 1028500,
-        //         "blockHash": "mock_hash_2",
-        //         "from": "0x4b...mock",
-        //         "to": "3f4...mock",
-        //         "contractName": null,
-        //         "method": "transfer",
-        //         "status": "Success",
-        //         "timestamp": 1768372000000,
-        //         "dateTime": "2026-01-14 11:50",
-        //         "gasUsed": 21000
-        //     }
-        // ];
-        // return mockData;
-        return [];
+            const response = await axios.get(url, { params });
+
+            if (response.data && response.data.transactions) {
+                return response.data.transactions;
+            }
+            return [];
+        } catch (error) {
+            console.error('Error fetching transactions from external source:', error.message);
+            return [];
+        }
     }
 
     static async syncTransactions() {
