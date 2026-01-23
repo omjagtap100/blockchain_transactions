@@ -8,7 +8,7 @@ export class CMTransaction {
     static async fetchFromExternalSource() {
 
         try {
-            const url = 'http://localhost:9010/bcexplorer/contract/transactions';
+            const url = `${process.env.CONNECTOR_URL}/contract/transactions`;
             const params = {
                 contractName: '3f4ac2e2ab05da16af1dfa63ab342337dd2eb2a5',
                 fromBlock: 1025456,
@@ -27,20 +27,68 @@ export class CMTransaction {
         }
     }
 
+    static async fetchContractsFromExternalSource() {
+        try {
+            const url = `${process.env.CONNECTOR_URL}/contracts`;
+            const response = await axios.get(url);
+
+            if (response.data && response.data.contracts) {
+                return response.data.contracts;
+            } else if (Array.isArray(response.data)) {
+                return response.data;
+            }
+            return [];
+        } catch (error) {
+            console.error('Error fetching contracts from external source:', error.message);
+            return [];
+        }
+    }
+
     static async syncTransactions() {
         const transactions = await this.fetchFromExternalSource();
-        const { Transaction } = MODELS;
+        const { Transaction, Contract } = MODELS;
+
+        // Fetch all contracts to map address -> id
+        const allContracts = await Contract.findAll();
+        const contractMap = {};
+        allContracts.forEach(c => {
+            contractMap[c.address] = c.id;
+        });
 
         let newCount = 0;
         for (const tx of transactions) {
+            // Find contractId based on contractName (address) in transaction
+            const cId = contractMap[tx.contractName];
 
             const [record, created] = await Transaction.findOrCreate({
                 where: { txId: tx.txId },
-                defaults: tx
+                defaults: {
+                    ...tx,
+                    contractId: cId || null
+                }
             });
             if (created) newCount++;
         }
         console.log(`Synced: ${newCount} new transactions.`);
+        return newCount;
+    }
+
+    static async syncContracts() {
+        const contracts = await this.fetchContractsFromExternalSource();
+        const { Contract } = MODELS;
+
+        let newCount = 0;
+        for (const contract of contracts) {
+            const [record, created] = await Contract.findOrCreate({
+                where: { address: contract.address },
+                defaults: {
+                    name: contract.name,
+                    address: contract.address
+                }
+            });
+            if (created) newCount++;
+        }
+        console.log(`Synced: ${newCount} new contracts.`);
         return newCount;
     }
 
@@ -68,5 +116,11 @@ export class CMTransaction {
             where: { txId }
         });
         return transaction;
+    }
+
+    static async getContracts() {
+        const { Contract } = MODELS;
+        const contracts = await Contract.findAll();
+        return contracts;
     }
 }

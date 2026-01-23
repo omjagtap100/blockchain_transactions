@@ -4,6 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { startConnection } from './sequelize.js';
 import { companyApis } from './routes/company/company_api.js';
+import { CMTransaction } from './entityManagers/company/cmTransaction.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -11,6 +12,7 @@ const app = express();
 
 const init = async () => {
     await startConnection();
+    await CMTransaction.syncContracts();
 
     app.use(cors({ origin: '*' }));
     app.use(morgan('combined'));
@@ -21,7 +23,7 @@ const init = async () => {
     app.use(companyApis);
 
     const PORT = process.env.PORT || 3000;
-    
+
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });

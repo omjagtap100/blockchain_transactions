@@ -3,6 +3,7 @@ import dbConfig from "./config/config.js";
 import UserModel from './models/User.js';
 import JwtModel from './models/Jwt.js';
 import TransactionModel from './models/Transaction.js';
+import ContractModel from './models/Contract.js';
 import dotenv from 'dotenv';
 dotenv.config();
 export let sequelize;
@@ -16,12 +17,16 @@ export const startConnection = async () => {
     MODELS.User = UserModel(sequelize, Sequelize);
     MODELS.Jwt = JwtModel(sequelize, Sequelize);
     MODELS.Transaction = TransactionModel(sequelize, Sequelize);
+    MODELS.Contract = ContractModel(sequelize, Sequelize);
 
     // ==============================
     // USER RELATIONS
     // ==============================
     MODELS.User.hasMany(MODELS.Jwt, { foreignKey: 'userId', as: 'jwts' });
     MODELS.Jwt.belongsTo(MODELS.User, { foreignKey: 'userId', as: 'user' });
+
+    MODELS.Contract.hasMany(MODELS.Transaction, { foreignKey: 'contractId', as: 'transactions' });
+    MODELS.Transaction.belongsTo(MODELS.Contract, { foreignKey: 'contractId', as: 'contract' });
 
 };
 

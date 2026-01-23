@@ -8,6 +8,14 @@ export default function (sequelize) {
             unique: true,
             primaryKey: true
         },
+        contractId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'Contracts',
+                key: 'id'
+            }
+        },
         blockHeight: {
             type: DataTypes.INTEGER,
             allowNull: false

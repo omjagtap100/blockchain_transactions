@@ -49,3 +49,17 @@ company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) 
         }
     }
 });
+
+company_transaction_api.get(`${ns}/contracts`, company_middleware, async (req, res) => {
+    try {
+        const result = await CMTransaction.getContracts();
+        res.status(200).send(new ApiResponse(200, result, "Contracts Fetched Successfully"));
+    } catch (error) {
+        console.error("Get Contracts Error:", error);
+        if (error instanceof ApiError) {
+            res.status(error.statusCode).send(error);
+        } else {
+            res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+        }
+    }
+});
