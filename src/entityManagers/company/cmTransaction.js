@@ -79,7 +79,6 @@ export class CMTransaction {
             const effectiveContractName = tx.contractName || respContractName;
             const cId = contractMap[effectiveContractName];
 
-            // Handle "N/A" or non-numeric gasUsed
             const gasUsed = (tx.gasUsed === "N/A" || isNaN(tx.gasUsed)) ? 0 : parseInt(tx.gasUsed);
 
             const [record, created] = await Transaction.findOrCreate({
