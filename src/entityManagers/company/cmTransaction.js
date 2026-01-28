@@ -1,29 +1,47 @@
 import { MODELS } from '../../sequelize.js';
 import { ApiError } from '../../helper/ApiError.js';
+import { HashingService } from '../../helper/HashingService.js';
 import axios from 'axios';
 
 export class CMTransaction {
 
 
-    static async fetchFromExternalSource() {
-
+    static async fetchFromExternalSource(params) {
         try {
-            const url = `${process.env.CONNECTOR_URL}/contract/transactions`;
-            const params = {
-                contractName: '3f4ac2e2ab05da16af1dfa63ab342337dd2eb2a5',
-                fromBlock: 1025456,
-                toBlock: 925456
+            const url = process.env.EXTERNAL_TRANSACTION_API_URL;
+            const secretKey = process.env.EXTERNAL_SECRET_KEY;
+            const appid = process.env.EXTERNAL_APP_ID;
+            const sid = process.env.EXTERNAL_SID;
+
+            const data = {
+                contractName: params.contractName,
+                fromBlock: parseInt(params.fromBlock || 0),
+                toBlock: parseInt(params.toBlock || 10000)
             };
 
-            const response = await axios.get(url, { params });
+            const hashkey = await HashingService.generateHash(null, data, secretKey);
 
-            if (response.data && response.data.transactions) {
-                return response.data.transactions;
-            }
-            return [];
+            const payload = {
+                data,
+                hashkey
+            };
+
+            const headers = {
+                'appid': appid,
+                'sid': sid,
+                'Content-Type': 'application/json'
+            };
+
+            const response = await axios.post(url, payload, { headers });
+
+            const resData = response.data.data || response.data;
+            const transactions = resData.transactions || [];
+            const contractName = resData.contractName || params.contractName;
+
+            return { transactions, contractName };
         } catch (error) {
             console.error('Error fetching transactions from external source:', error.message);
-            return [];
+            return { transactions: [], contractName: params.contractName };
         }
     }
 
@@ -44,11 +62,11 @@ export class CMTransaction {
         }
     }
 
-    static async syncTransactions() {
-        const transactions = await this.fetchFromExternalSource();
+    static async syncTransactions(params = {}) {
+        const { transactions, contractName: respContractName } = await this.fetchFromExternalSource(params);
         const { Transaction, Contract } = MODELS;
 
-        // Fetch all contracts to map address -> id
+
         const allContracts = await Contract.findAll();
         const contractMap = {};
         allContracts.forEach(c => {
@@ -57,14 +75,20 @@ export class CMTransaction {
 
         let newCount = 0;
         for (const tx of transactions) {
-            // Find contractId based on contractName (address) in transaction
-            const cId = contractMap[tx.contractName];
+
+            const effectiveContractName = tx.contractName || respContractName;
+            const cId = contractMap[effectiveContractName];
+
+            // Handle "N/A" or non-numeric gasUsed
+            const gasUsed = (tx.gasUsed === "N/A" || isNaN(tx.gasUsed)) ? 0 : parseInt(tx.gasUsed);
 
             const [record, created] = await Transaction.findOrCreate({
                 where: { txId: tx.txId },
                 defaults: {
                     ...tx,
-                    contractId: cId || null
+                    contractName: effectiveContractName,
+                    contractId: cId || null,
+                    gasUsed: gasUsed
                 }
             });
             if (created) newCount++;

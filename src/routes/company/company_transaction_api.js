@@ -11,11 +11,11 @@ const ns = `/company/transactions`;
 
 company_transaction_api.get(`${ns}`, company_middleware, async (req, res) => {
     try {
+        const { page, pageSize, contractName, fromBlock, toBlock } = req.query;
 
-        await CMTransaction.syncTransactions();
+        await CMTransaction.syncTransactions({ contractName, fromBlock, toBlock });
 
 
-        const { page, pageSize } = req.query;
         const result = await CMTransaction.getTransactions({ page, pageSize });
 
         res.status(200).send(new ApiResponse(200, result, "Transactions Fetched Successfully"));
