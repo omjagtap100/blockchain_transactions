@@ -24,7 +24,7 @@ company_access_api.post(`${ns}/login`, async (req, res) => {
     }
 });
 
-// Dummy API to create user with hashed password
+
 company_access_api.post(`${ns}/dummy-user`, async (req, res) => {
     try {
         const { firstName, lastName, phone, email, password } = req.body;
