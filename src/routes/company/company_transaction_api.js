@@ -11,9 +11,9 @@ const ns = `/company/transactions`;
 
 company_transaction_api.get(`${ns}`, company_middleware, async (req, res) => {
     try {
-        const { page, pageSize } = req.query;
+        const { page, pageSize, contractName } = req.query;
 
-        const result = await CMTransaction.getTransactions({ page, pageSize });
+        const result = await CMTransaction.getTransactions({ page, pageSize, contractName });
 
         res.status(200).send(new ApiResponse(200, result, "Transactions Fetched Successfully"));
     } catch (error) {
@@ -27,6 +27,20 @@ company_transaction_api.get(`${ns}`, company_middleware, async (req, res) => {
 });
 
 
+company_transaction_api.get(`${ns}/contracts`, company_middleware, async (req, res) => {
+    try {
+        const result = await CMTransaction.getContracts();
+        res.status(200).send(new ApiResponse(200, result, "Contracts Fetched Successfully"));
+    } catch (error) {
+        console.error("Get Contracts Error:", error);
+        if (error instanceof ApiError) {
+            res.status(error.statusCode).send(error);
+        } else {
+            res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+        }
+    }
+});
+
 company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) => {
     try {
         const { txId } = req.params;
@@ -39,20 +53,6 @@ company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) 
         res.status(200).send(new ApiResponse(200, result, "Transaction Fetched Successfully"));
     } catch (error) {
         console.error("Get Transaction by ID Error:", error);
-        if (error instanceof ApiError) {
-            res.status(error.statusCode).send(error);
-        } else {
-            res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
-        }
-    }
-});
-
-company_transaction_api.get(`${ns}/contracts`, company_middleware, async (req, res) => {
-    try {
-        const result = await CMTransaction.getContracts();
-        res.status(200).send(new ApiResponse(200, result, "Contracts Fetched Successfully"));
-    } catch (error) {
-        console.error("Get Contracts Error:", error);
         if (error instanceof ApiError) {
             res.status(error.statusCode).send(error);
         } else {

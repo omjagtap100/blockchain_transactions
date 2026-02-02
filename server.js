@@ -15,7 +15,6 @@ const startServer = async () => {
         cron.schedule('*/10 * * * * *', async () => {
             console.log('Running transaction sync cron job...');
             try {
-
                 await CMTransaction.syncContracts();
 
                 const contracts = await CMTransaction.getContracts();

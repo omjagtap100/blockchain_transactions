@@ -93,6 +93,7 @@ Retrieve a paginated list of transactions.
 **Query Parameters:**
 - `page` (optional): Page number (default: 1).
 - `pageSize` (optional): Number of items per page (default: 10).
+- `contractName` (optional): Filter transactions by contract address/name.
 
 **Response Data:**
 ```json

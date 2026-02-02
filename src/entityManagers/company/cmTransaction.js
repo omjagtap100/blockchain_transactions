@@ -117,12 +117,18 @@ export class CMTransaction {
         return newCount;
     }
 
-    static async getTransactions({ page = 1, pageSize = 10 }) {
+    static async getTransactions({ page = 1, pageSize = 10, contractName }) {
         const { Transaction } = MODELS;
         const limit = parseInt(pageSize);
         const offset = (parseInt(page) - 1) * limit;
+        const whereClause = {};
+
+        if (contractName) {
+            whereClause.contractName = contractName;
+        }
 
         const { count, rows } = await Transaction.findAndCountAll({
+            where: whereClause,
             limit,
             offset,
             order: [['timestamp', 'DESC']]
