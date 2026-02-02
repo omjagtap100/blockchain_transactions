@@ -12,7 +12,7 @@ const startServer = async () => {
         console.log('Initial contract sync completed.');
 
 
-        cron.schedule('* * * * *', async () => {
+        cron.schedule('*/10 * * * * *', async () => {
             console.log('Running transaction sync cron job...');
             try {
 
@@ -23,21 +23,20 @@ const startServer = async () => {
 
                 for (const contract of contracts) {
                     try {
+                        const currentCursor = contract.cursor;
 
-                        const maxBlock = await MODELS.Transaction.max('blockHeight', {
-                            where: { contractName: contract.address }
-                        });
+                        console.log(`Syncing ${contract.address} with cursor ${currentCursor}...`);
 
-                        const fromBlock = maxBlock ? maxBlock + 1 : 0;
-                        const toBlock = 100000000;
-
-                        console.log(`Syncing ${contract.address} from block ${fromBlock}...`);
-
-                        await CMTransaction.syncTransactions({
+                        const { newCount, nextCursor } = await CMTransaction.syncTransactions({
                             contractName: contract.address,
-                            fromBlock: fromBlock,
-                            toBlock: toBlock
+                            cursor: currentCursor
                         });
+
+                        if (nextCursor && nextCursor !== currentCursor) {
+                            contract.cursor = nextCursor;
+                            await contract.save();
+                            console.log(`Updated cursor for ${contract.address} to ${nextCursor}`);
+                        }
 
                     } catch (err) {
                         console.error(`Error syncing contract ${contract.address}:`, err.message);
@@ -50,7 +49,7 @@ const startServer = async () => {
             }
         });
 
-        console.log('Cron job scheduled: running every minute.');
+        console.log('Cron job scheduled.');
 
     } catch (error) {
         console.error('Failed to start server:', error);

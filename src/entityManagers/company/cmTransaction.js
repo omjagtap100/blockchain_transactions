@@ -15,8 +15,9 @@ export class CMTransaction {
 
             const data = {
                 contractName: params.contractName,
-                fromBlock: parseInt(params.fromBlock || 0),
-                toBlock: parseInt(params.toBlock || 10000)
+                fromBlock: 0,
+                toBlock: 100000000,
+                cursor: params.cursor || null
             };
 
             const hashkey = await HashingService.generateHash(null, data, secretKey);
@@ -37,11 +38,12 @@ export class CMTransaction {
             const resData = response.data.data || response.data;
             const transactions = resData.transactions || [];
             const contractName = resData.contractName || params.contractName;
+            const nextCursor = resData.nextCursor;
 
-            return { transactions, contractName };
+            return { transactions, contractName, nextCursor };
         } catch (error) {
             console.error('Error fetching transactions from external source:', error.message);
-            return { transactions: [], contractName: params.contractName };
+            return { transactions: [], contractName: params.contractName, nextCursor: null };
         }
     }
 
@@ -63,7 +65,7 @@ export class CMTransaction {
     }
 
     static async syncTransactions(params = {}) {
-        const { transactions, contractName: respContractName } = await this.fetchFromExternalSource(params);
+        const { transactions, contractName: respContractName, nextCursor } = await this.fetchFromExternalSource(params);
         const { Transaction, Contract } = MODELS;
 
 
@@ -92,8 +94,8 @@ export class CMTransaction {
             });
             if (created) newCount++;
         }
-        console.log(`Synced: ${newCount} new transactions.`);
-        return newCount;
+        console.log(`Synced: ${newCount} new transactions. Next Cursor: ${nextCursor}`);
+        return { newCount, nextCursor };
     }
 
     static async syncContracts() {

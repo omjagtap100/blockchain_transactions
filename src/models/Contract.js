@@ -16,6 +16,11 @@ export default function (sequelize) {
             type: DataTypes.STRING,
             allowNull: false,
             unique: true
+        },
+        cursor: {
+            type: DataTypes.BIGINT,
+            allowNull: true,
+            defaultValue: 0
         }
     }, {
         tableName: 'contracts',
