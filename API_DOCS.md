@@ -155,3 +155,44 @@ An array of Contract objects:
   }
 ]
 ```
+
+### Search Transactions
+**GET** `/transactions/search`
+
+Search for transactions by transaction ID or address (from/to).
+
+**Query Parameters:**
+- `query` (required): Search term to match against transaction ID, from address, or to address.
+- `page` (optional): Page number (default: 1).
+- `pageSize` (optional): Number of items per page (default: 10).
+
+**Response Data:**
+```json
+{
+  "totalItems": "integer",
+  "items": [
+    {
+      "txId": "string",
+      "contractId": "integer | null",
+      "blockHeight": "integer",
+      "blockHash": "string",
+      "from": "string",
+      "to": "string",
+      "contractName": "string",
+      "method": "string",
+      "status": "string",
+      "timestamp": "bigint",
+      "dateTime": "string",
+      "gasUsed": "integer",
+      "createdAt": "date-string",
+      "updatedAt": "date-string"
+    }
+  ],
+  "totalPages": "integer",
+  "currentPage": "integer"
+}
+```
+
+**Errors:**
+- `400 Bad Request`: If search query is not provided.
+- `500 Internal Server Error`: For any server-side errors.
