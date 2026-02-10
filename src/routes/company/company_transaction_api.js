@@ -27,6 +27,26 @@ company_transaction_api.get(`${ns}`, company_middleware, async (req, res) => {
 });
 
 
+company_transaction_api.get(`${ns}/contracts/logs`, company_middleware, async (req, res) => {
+    try {
+        const { contractName, fromBlock } = req.query;
+        if (!contractName) {
+            return res.status(400).send(new ApiError(400, "contractName is required"));
+        }
+
+        const result = await CMTransaction.fetchContractLogs({
+            contractName,
+            fromBlock: fromBlock ? parseInt(fromBlock) : 0
+
+        });
+
+        res.status(200).send(new ApiResponse(200, result, "Contract Logs Fetched Successfully"));
+    } catch (error) {
+        console.error("Get Contract Logs Error:", error);
+        res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+    }
+});
+
 company_transaction_api.get(`${ns}/contracts`, company_middleware, async (req, res) => {
     try {
         const result = await CMTransaction.getContracts();
@@ -38,6 +58,16 @@ company_transaction_api.get(`${ns}/contracts`, company_middleware, async (req, r
         } else {
             res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
         }
+    }
+});
+
+company_transaction_api.get(`${ns}/block-height`, company_middleware, async (req, res) => {
+    try {
+        const result = await CMTransaction.fetchCurrentBlockHeight();
+        res.status(200).send(new ApiResponse(200, result, "Current Block Height Fetched Successfully"));
+    } catch (error) {
+        console.error("Get Block Height Error:", error);
+        res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
     }
 });
 

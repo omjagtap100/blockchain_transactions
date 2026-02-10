@@ -13,10 +13,14 @@ export class CMTransaction {
             const appid = process.env.EXTERNAL_APP_ID;
             const sid = process.env.EXTERNAL_SID;
 
+
+            const currentBlockHeight = await this.fetchCurrentBlockHeight();
+            const toBlock = currentBlockHeight || 100000000;
+
             const data = {
                 contractName: params.contractName,
                 fromBlock: 0,
-                toBlock: 100000000,
+                toBlock: toBlock,
                 cursor: params.cursor || null
             };
 
@@ -44,6 +48,88 @@ export class CMTransaction {
         } catch (error) {
             console.error('Error fetching transactions from external source:', error.message);
             return { transactions: [], contractName: params.contractName, nextCursor: null };
+        }
+    }
+
+    static async fetchContractLogs(params) {
+        try {
+            const url = process.env.EXTERNAL_CONTRACT_LOGS_URL;
+            const secretKey = process.env.EXTERNAL_SECRET_KEY;
+            const appid = process.env.EXTERNAL_APP_ID;
+            const sid = process.env.EXTERNAL_SID;
+
+
+            let toBlock = params.toBlock;
+            if (!toBlock) {
+                const currentHeight = await this.fetchCurrentBlockHeight();
+                toBlock = currentHeight || 100000000;
+            }
+
+            const data = {
+                contractName: params.contractName,
+                fromBlock: params.fromBlock || 0,
+                toBlock: toBlock
+            };
+
+            const hashkey = await HashingService.generateHash(null, data, secretKey);
+
+            const payload = {
+                data,
+                hashkey
+            };
+
+            const headers = {
+                'appid': appid,
+                'sid': sid,
+                'Content-Type': 'application/json'
+            };
+
+            const response = await axios.post(url, payload, { headers });
+
+            if (response.data && response.data.ok && response.data.data) {
+                return response.data.data;
+            }
+            return { transfers: [], message: "No data found or error in response" };
+
+        } catch (error) {
+            console.error('Error fetching contract logs:', error.message);
+            throw error;
+        }
+    }
+
+    static async fetchCurrentBlockHeight() {
+        try {
+            const baseUrl = process.env.EXTERNAL_BLOCK_HEIGHT_API_URL;
+            const secretKey = process.env.EXTERNAL_SECRET_KEY;
+            const appid = process.env.EXTERNAL_APP_ID;
+            const sid = process.env.EXTERNAL_SID;
+
+            const data = {
+                action: "getCurrentBlockHeight"
+            };
+
+            const hashkey = await HashingService.generateHash(null, data, secretKey);
+
+            const payload = {
+                data,
+                hashkey
+            };
+
+            const headers = {
+                'appid': appid,
+                'sid': sid,
+                'Content-Type': 'application/json'
+            };
+
+            const response = await axios.post(baseUrl, payload, { headers });
+
+            if (response.data && response.data.ok && response.data.data) {
+                return response.data.data;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching current block height:', error.message);
+            return null;
         }
     }
 
