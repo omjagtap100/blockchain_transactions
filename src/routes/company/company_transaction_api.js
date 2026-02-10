@@ -71,6 +71,27 @@ company_transaction_api.get(`${ns}/block-height`, company_middleware, async (req
     }
 });
 
+company_transaction_api.get(`${ns}/search`, company_middleware, async (req, res) => {
+    try {
+        const { query, page, pageSize } = req.query;
+
+        if (!query) {
+            return res.status(400).send(new ApiError(400, "Search query is required"));
+        }
+
+        const result = await CMTransaction.searchTransactions({ query, page, pageSize });
+
+        res.status(200).send(new ApiResponse(200, result, "Search Results Fetched Successfully"));
+    } catch (error) {
+        console.error("Search API Error:", error);
+        if (error instanceof ApiError) {
+            res.status(error.statusCode).send(error);
+        } else {
+            res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+        }
+    }
+});
+
 company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) => {
     try {
         const { txId } = req.params;
@@ -90,3 +111,4 @@ company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) 
         }
     }
 });
+

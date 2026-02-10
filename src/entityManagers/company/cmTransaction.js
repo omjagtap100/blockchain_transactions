@@ -240,4 +240,36 @@ export class CMTransaction {
         const contracts = await Contract.findAll();
         return contracts;
     }
+
+    static async searchTransactions({ query, page = 1, pageSize = 10 }) {
+        const { Transaction } = MODELS;
+        const { Op } = await import('sequelize');
+
+        if (!query || query.trim() === '') {
+            throw new ApiError(400, 'Search query is required');
+        }
+
+        const limit = parseInt(pageSize);
+        const offset = (parseInt(page) - 1) * limit;
+
+        const { count, rows } = await Transaction.findAndCountAll({
+            where: {
+                [Op.or]: [
+                    { txId: { [Op.like]: `%${query}%` } },
+                    { from: { [Op.like]: `%${query}%` } },
+                    { to: { [Op.like]: `%${query}%` } }
+                ]
+            },
+            limit,
+            offset,
+            order: [['timestamp', 'DESC']]
+        });
+
+        return {
+            totalItems: count,
+            items: rows,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page)
+        };
+    }
 }
