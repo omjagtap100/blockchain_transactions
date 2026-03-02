@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default_secret'; // Using secret from env for simplicity as per plan
-const EXPIRES_IN = process.env.JWT_EXPIRES_IN ? `${process.env.JWT_EXPIRES_IN}d` : '150d';
+const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
+const EXPIRES_IN = process.env.JWT_EXPIRES_IN ? `${process.env.JWT_EXPIRES_IN}h` : '999h';
 
 export const JWT_signProfile = (profile, profileType) => {
     let newProfile = { ...profile };
@@ -27,10 +27,10 @@ export function generate_JWT(user) {
     const payload = {
         id: user.id,
         name: user.firstName ? `${user.firstName} ${user.lastName}` : user.phone || user.email,
-        membershipId: user.id.toString(), // Simplify for now
+        membershipId: user.id.toString(),
     };
     let newProfile = { ...payload };
-    newProfile.profileType = 'customer'; // Matching reference
+    newProfile.profileType = 'customer';
     const token = jwt.sign(newProfile, JWT_SECRET, { expiresIn: EXPIRES_IN });
     return { accessToken: token, expiresIn: EXPIRES_IN };
 }

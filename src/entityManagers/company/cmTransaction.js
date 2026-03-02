@@ -97,6 +97,43 @@ export class CMTransaction {
         }
     }
 
+    static async fetchBlockRangeInfo(params) {
+        try {
+            const url = process.env.EXTERNAL_BLOCK_RANGE_API_URL;
+            const secretKey = process.env.EXTERNAL_SECRET_KEY;
+            const appid = process.env.EXTERNAL_APP_ID;
+            const sid = process.env.EXTERNAL_SID;
+
+            const data = {
+                startHeight: parseInt(params.startHeight) || 1,
+                endHeight: parseInt(params.endHeight) || 10
+            };
+
+            const hashkey = await HashingService.generateHash(null, data, secretKey);
+
+            const payload = {
+                data,
+                hashkey
+            };
+
+            const headers = {
+                'appid': appid,
+                'sid': sid,
+                'Content-Type': 'application/json'
+            };
+
+            const response = await axios.post(url, payload, { headers });
+
+            if (response.data && response.data.ok && response.data.data) {
+                return response.data.data;
+            }
+            return { message: "No data found or error in response" };
+        } catch (error) {
+            console.error('Error fetching block range info:', error.message);
+            throw error;
+        }
+    }
+
     static async fetchCurrentBlockHeight() {
         try {
             const baseUrl = process.env.EXTERNAL_BLOCK_HEIGHT_API_URL;

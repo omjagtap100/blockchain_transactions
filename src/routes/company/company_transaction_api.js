@@ -27,6 +27,22 @@ company_transaction_api.get(`${ns}`, company_middleware, async (req, res) => {
 });
 
 
+company_transaction_api.get(`${ns}/block-range`, company_middleware, async (req, res) => {
+    try {
+        const { startHeight, endHeight, blockHeight } = req.query;
+        let result;
+        if (blockHeight) {
+            result = await CMTransaction.fetchBlockRangeInfo({ blockHeight });
+        } else {
+            result = await CMTransaction.fetchBlockRangeInfo({ startHeight, endHeight });
+        }
+        res.status(200).send(new ApiResponse(200, result, "Block Range Info Fetched Successfully"));
+    } catch (error) {
+        console.error("Get Block Range Error:", error);
+        res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+    }
+});
+
 company_transaction_api.get(`${ns}/contracts/logs`, company_middleware, async (req, res) => {
     try {
         const { contractName, fromBlock } = req.query;
