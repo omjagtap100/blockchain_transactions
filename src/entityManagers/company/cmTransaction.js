@@ -103,11 +103,17 @@ export class CMTransaction {
             const secretKey = process.env.EXTERNAL_SECRET_KEY;
             const appid = process.env.EXTERNAL_APP_ID;
             const sid = process.env.EXTERNAL_SID;
-
-            const data = {
-                startHeight: parseInt(params.startHeight) || 1,
-                endHeight: parseInt(params.endHeight) || 10
-            };
+            let data ={}
+            if(params.blockHeight){
+                data.blockHeight=params.blockHeight
+            }
+            else {
+               
+                    data.startHeight= parseInt(params.startHeight) || 1,
+                    data.endHeight= parseInt(params.endHeight) || 10
+              
+                
+            }
 
             const hashkey = await HashingService.generateHash(null, data, secretKey);
 

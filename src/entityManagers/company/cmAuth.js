@@ -9,7 +9,6 @@ export class CMAuth {
         if ((!phone && !email) || !password) {
             throw new ApiError(400, "Phone/Email and Password are required");
         }
-
         const { User, Jwt } = MODELS;
         let user;
         const whereClause = {};
