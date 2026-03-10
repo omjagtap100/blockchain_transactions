@@ -163,3 +163,27 @@ company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) 
     }
 });
 
+// /**
+//  * POST /company/transactions/generate-hash
+//  * Generates a hash key using the HashingService and the external secret key.
+//  * Used for testing external gateway APIs.
+//  */
+// company_transaction_api.post(`${ns}/generate-hash`, company_middleware, async (req, res) => {
+//     try {
+//         const { data } = req.body || {};
+//         const secretKey = process.env.EXTERNAL_SECRET_KEY;
+
+//         if (!data) {
+//             return res.status(400).send(new ApiError(400, "data field is required in request body"));
+//         }
+
+//         const { HashingService } = await import('../../helper/HashingService.js');
+//         const hashkey = await HashingService.generateHash(null, data, secretKey);
+
+//         res.status(200).send(new ApiResponse(200, { hashkey }, "Hash Key Generated Successfully"));
+//     } catch (error) {
+//         console.error("Generate Hash Error:", error);
+//         res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+//     }
+// });
+
