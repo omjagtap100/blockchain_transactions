@@ -103,16 +103,16 @@ export class CMTransaction {
             const secretKey = process.env.EXTERNAL_SECRET_KEY;
             const appid = process.env.EXTERNAL_APP_ID;
             const sid = process.env.EXTERNAL_SID;
-            let data ={}
-            if(params.blockHeight){
-                data.blockHeight=params.blockHeight
+            let data = {}
+            if (params.blockHeight) {
+                data.blockHeight = params.blockHeight
             }
             else {
-               
-                    data.startHeight= parseInt(params.startHeight) || 1,
-                    data.endHeight= parseInt(params.endHeight) || 10
-              
-                
+
+                data.startHeight = parseInt(params.startHeight) || 1,
+                    data.endHeight = parseInt(params.endHeight) || 10
+
+
             }
 
             const hashkey = await HashingService.generateHash(null, data, secretKey);
@@ -244,6 +244,130 @@ export class CMTransaction {
         }
         console.log(`Synced: ${newCount} new contracts.`);
         return newCount;
+    }
+
+    /**
+     * Calls the external getContractList API for a single page,
+     * then saves any new contracts into the contracts table.
+     * @param {number} offset - The starting position for this page.
+     * @param {number} limit  - Number of contracts per page.
+     * @returns {{ contracts: Array, total: number, savedCount: number }}
+     */
+    static async fetchContractList({ offset = 0, limit = 20 } = {}) {
+        try {
+            const url = process.env.EXTERNAL_CONTRACT_LIST_URL;
+            const secretKey = process.env.EXTERNAL_SECRET_KEY;
+            const appid = process.env.EXTERNAL_APP_ID;
+            const sid = process.env.EXTERNAL_SID;
+
+            const data = { offset, limit };
+
+            const hashkey = await HashingService.generateHash(null, data, secretKey);
+
+            const payload = { data, hashkey };
+
+            const headers = {
+                'appid': appid,
+                'sid': sid,
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.EXTERNAL_BEARER_TOKEN || ''}`
+            };
+
+            const response = await axios.post(url, payload, { headers });
+
+            let contractList = [];
+            let total = 0;
+
+            if (response.data && response.data.ok && response.data.data) {
+                const resData = response.data.data;
+                // Support various response shapes the API may return
+                contractList = resData.contracts || resData.list || resData.data || [];
+                total = resData.total ?? contractList.length;
+            }
+
+            // --- Persist contracts into the contracts table ---
+            const { Contract } = MODELS;
+            let savedCount = 0;
+
+            for (const contract of contractList) {
+                const contractAddress = contract.address || contract.contractAddress;
+                const contractName = contract.name || contract.contractName || contractAddress;
+
+                if (!contractAddress) continue;
+
+                const [, created] = await Contract.findOrCreate({
+                    where: { address: contractAddress },
+                    defaults: {
+                        name: contractName,
+                        address: contractAddress
+                    }
+                });
+
+                if (created) savedCount++;
+            }
+
+            console.log(`[fetchContractList] offset=${offset} — fetched ${contractList.length}, saved ${savedCount} new contract(s).`);
+
+            return { contracts: contractList, total, savedCount };
+        } catch (error) {
+            console.error('Error fetching contract list from external source:', error.message);
+            return { contracts: [], total: 0, savedCount: 0 };
+        }
+    }
+
+    /**
+     * Syncs all contracts from the external getContractList API using paginated offsets.
+     * The current offset is persisted in the app_configs table (key: 'contract_list_offset')
+     * so the sync can safely resume after a restart without re-processing all pages.
+     *
+     * @returns {{ syncedCount: number, finalOffset: number }}
+     */
+    static async syncContractListWithOffset() {
+        const { AppConfig } = MODELS;
+
+        let configRow = await AppConfig.findOne({ where: { key: 'contract_list_offset' } });
+        let currentOffset = configRow ? parseInt(configRow.value, 10) : 0;
+
+        console.log(`[syncContractListWithOffset] Starting sync from offset ${currentOffset}`);
+
+        const limit = 20;
+        let totalSynced = 0;
+        let hasMore = true;
+
+        while (hasMore) {
+            // fetchContractList fetches the page AND saves new contracts to the DB
+            const { contracts, savedCount } = await this.fetchContractList({ offset: currentOffset, limit });
+
+            if (!Array.isArray(contracts) || contracts.length === 0) {
+                console.log(`[syncContractListWithOffset] No more contracts at offset ${currentOffset}. Sync complete.`);
+                hasMore = false;
+                break;
+            }
+
+            totalSynced += savedCount;
+            currentOffset += contracts.length;
+
+            // Persist the updated offset after each successful page
+            if (configRow) {
+                configRow.value = String(currentOffset);
+                await configRow.save();
+            } else {
+                configRow = await AppConfig.create({
+                    key: 'contract_list_offset',
+                    value: String(currentOffset)
+                });
+            }
+
+            console.log(`[syncContractListWithOffset] Page done: ${savedCount} new contracts saved. Offset now: ${currentOffset}`);
+
+            // Stop when the page returned fewer items than the limit (last page)
+            if (contracts.length < limit) {
+                hasMore = false;
+            }
+        }
+
+        console.log(`[syncContractListWithOffset] Done. Total new: ${totalSynced}. Final offset: ${currentOffset}`);
+        return { syncedCount: totalSynced, finalOffset: currentOffset };
     }
 
     static async getTransactions({ page = 1, pageSize = 10, contractName }) {

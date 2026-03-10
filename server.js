@@ -56,11 +56,12 @@
 // };
 
 // startServer();
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config();
 import cron from 'node-cron';
 import axios from 'axios';
-
 const BASE_URL = process.env.BACKEND_BASE_URL;
+const EXTERNAL_TRANSACTION_API_URL = process.env.EXTERNAL_TRANSACTION_API_URL;
 const BACKEND_EMAIL = process.env.BACKEND_EMAIL;
 const BACKEND_PASSWORD = process.env.BACKEND_PASSWORD;
 
@@ -185,6 +186,7 @@ const runSync = async () => {
 };
 
 const start = async () => {
+    console.log(EXTERNAL_TRANSACTION_API_URL)
     if (!BASE_URL) {
         console.error('BACKEND_BASE_URL is not set in .env. Exiting.');
         process.exit(1);

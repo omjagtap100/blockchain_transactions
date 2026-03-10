@@ -4,6 +4,7 @@ import UserModel from './models/User.js';
 import JwtModel from './models/Jwt.js';
 import TransactionModel from './models/Transaction.js';
 import ContractModel from './models/Contract.js';
+import AppConfigModel from './models/AppConfig.js';
 import dotenv from 'dotenv';
 dotenv.config();
 export let sequelize;
@@ -18,6 +19,7 @@ export const startConnection = async () => {
     MODELS.Jwt = JwtModel(sequelize, Sequelize);
     MODELS.Transaction = TransactionModel(sequelize, Sequelize);
     MODELS.Contract = ContractModel(sequelize, Sequelize);
+    MODELS.AppConfig = AppConfigModel(sequelize, Sequelize);
 
     // ==============================
     // USER RELATIONS

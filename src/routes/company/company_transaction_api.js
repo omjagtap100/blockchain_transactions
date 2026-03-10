@@ -77,6 +77,25 @@ company_transaction_api.get(`${ns}/contracts`, company_middleware, async (req, r
     }
 });
 
+/**
+ * POST /company/transactions/contracts/sync-list
+ * Fetches contracts from the external getContractList API using paginated offsets,
+ * stores new ones in the contracts table, and persists the offset in app_configs.
+ */
+company_transaction_api.post(`${ns}/contracts/sync-list`, company_middleware, async (req, res) => {
+    try {
+        const result = await CMTransaction.syncContractListWithOffset();
+        res.status(200).send(new ApiResponse(200, result, "Contract List Synced Successfully"));
+    } catch (error) {
+        console.error("Sync Contract List Error:", error);
+        if (error instanceof ApiError) {
+            res.status(error.statusCode).send(error);
+        } else {
+            res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+        }
+    }
+});
+
 company_transaction_api.get(`${ns}/block-height`, company_middleware, async (req, res) => {
     try {
         const result = await CMTransaction.fetchCurrentBlockHeight();
