@@ -223,6 +223,15 @@ export class CMTransaction {
             });
             if (created) newCount++;
         }
+
+        const updateAddress = params.contractName || respContractName;
+        if (updateAddress && nextCursor) {
+            await Contract.update(
+                { cursor: nextCursor },
+                { where: { address: updateAddress } }
+            );
+        }
+
         console.log(`Synced: ${newCount} new transactions. Next Cursor: ${nextCursor}`);
         return { newCount, nextCursor };
     }
@@ -290,16 +299,35 @@ export class CMTransaction {
             let savedCount = 0;
 
             for (const contract of contractList) {
-                const contractAddress = contract.address || contract.contractAddress;
-                const contractName = contract.name || contract.contractName || contractAddress;
+                const contractAddress = contract.address || contract.contractAddress || contract.ContractAddress;
+                const contractName = contract.name || contract.contractName || contract.Name || contractAddress;
 
                 if (!contractAddress) continue;
 
+                const queryAddress = contractAddress.toLowerCase();
+
                 const [, created] = await Contract.findOrCreate({
-                    where: { address: contractAddress },
+                    where: { address: queryAddress },
                     defaults: {
                         name: contractName,
-                        address: contractAddress
+                        address: queryAddress,
+                        externalId: contract.ID || contract.id || null,
+                        pid: contract.PID !== undefined ? contract.PID : (contract.pid !== undefined ? contract.pid : null),
+                        orgId: contract.OrgID || contract.orgId || null,
+                        orgName: contract.OrgName || contract.orgName || null,
+                        runtimeType: contract.RuntimeType || contract.runtimeType || null,
+                        runtimeTypeId: contract.RuntimeTypeID || contract.runtimeTypeId || null,
+                        version: contract.Version || contract.version || null,
+                        statusCodeName: contract.StatusCodeName || contract.statusCodeName || null,
+                        statusCode: contract.StatusCode !== undefined ? contract.StatusCode : (contract.statusCode !== undefined ? contract.statusCode : null),
+                        externalCreateTime: contract.CreateTime || contract.createTime || null,
+                        externalUpdateTime: contract.UpdateTime || contract.updateTime || null,
+                        appId: contract.AppID || contract.appId || null,
+                        contentId: contract.ContentID || contract.contentId || null,
+                        chainId: contract.ChainID || contract.chainId || null,
+                        contentFileName: contract.ContentFileName || contract.contentFileName || null,
+                        initParam: contract.InitParam || contract.initParam || null,
+                        abiContentFileName: contract.AbiContentFileName || contract.abiContentFileName || null
                     }
                 });
 
@@ -360,7 +388,7 @@ export class CMTransaction {
 
             console.log(`[syncContractListWithOffset] Page done: ${savedCount} new contracts saved. Offset now: ${currentOffset}`);
 
-            // Stop when the page returned fewer items than the limit (last page)
+
             if (contracts.length < limit) {
                 hasMore = false;
             }

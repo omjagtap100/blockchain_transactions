@@ -12,7 +12,7 @@ const app = express();
 
 const init = async () => {
     await startConnection();
-    await CMTransaction.syncContracts();
+    await CMTransaction.syncContractListWithOffset();
 
     app.use(cors({ origin: '*' }));
     app.use(morgan('combined'));

@@ -27,6 +27,22 @@ company_transaction_api.get(`${ns}`, company_middleware, async (req, res) => {
 });
 
 
+company_transaction_api.post(`${ns}/sync`, company_middleware, async (req, res) => {
+    try {
+        const { contractName, cursor } = req.body || {};
+        const result = await CMTransaction.syncTransactions({ contractName, cursor });
+        res.status(200).send(new ApiResponse(200, result, "Transactions Synced Successfully"));
+    } catch (error) {
+        console.error("Sync Transactions Error:", error);
+        if (error instanceof ApiError) {
+            res.status(error.statusCode).send(error);
+        } else {
+            res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+        }
+    }
+});
+
+
 company_transaction_api.get(`${ns}/block-range`, company_middleware, async (req, res) => {
     try {
         const { startHeight, endHeight, blockHeight } = req.query;

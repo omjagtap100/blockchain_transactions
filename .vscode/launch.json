@@ -12,6 +12,15 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}\\src\\company.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Contract Fetcher",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}\\tridentity-contract-fetching\\server.js"
         }
     ]
 }
