@@ -19,6 +19,12 @@ pipeline {
             }
         }
 
+        stage('Database Migration') {
+            steps {
+                sh 'npm run migrate'
+            }
+        }
+
         stage('Run Tests') {
             steps {
                 sh 'npm test'
@@ -27,7 +33,9 @@ pipeline {
 
         stage('Start Server') {
             steps {
-                sh 'pm2 restart server || pm2 start server.js'
+                // Ensure pm2 handles both the main API and the cron/fetching service
+                sh 'pm2 restart company-api || pm2 start src/company.js --name "company-api"'
+                sh 'pm2 restart fetch-cron || pm2 start server.js --name "fetch-cron"'
             }
         }
     }

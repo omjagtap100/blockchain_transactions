@@ -10,7 +10,7 @@
         "dev": "nodemon src/company.js",
         "migrate": "npx sequelize-cli db:migrate",
         "seed": "npx sequelize-cli db:seed:all",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "node src/verify_setup.js"
     },
     "author": "",
     "license": "ISC",
