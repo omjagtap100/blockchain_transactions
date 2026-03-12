@@ -9,7 +9,7 @@ pipeline {
 
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/yourusername/node-api.git'
+                git 'https://github.com/omjagtap100/triapp_blockchain.git'
             }
         }
 
