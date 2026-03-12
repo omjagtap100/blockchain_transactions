@@ -10,9 +10,9 @@ const ns = `/company/access`;
 
 company_access_api.post(`${ns}/login`, async (req, res) => {
     try {
-        const { phone, email, password } = req.body;
+        const { phone, email, password, fcmToken, deviceId, sourceIp, phoneCode, otp } = req.body;
 
-        const result = await CMAuth.login({ phone, email, password });
+        const result = await CMAuth.login({ phone, email, password, fcmToken, deviceId, sourceIp, phoneCode, otp });
         res.status(200).send(new ApiResponse(200, result, "Login Successful"));
     } catch (error) {
         if (error instanceof ApiError) {

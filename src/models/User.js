@@ -6,6 +6,14 @@ export default (sequelize, DataTypes) => {
         email: { type: DataTypes.STRING, allowNull: true, unique: true },
         phone: { type: DataTypes.STRING, allowNull: true, unique: true },
         password: { type: DataTypes.STRING, allowNull: true }, // Make nullable if using OTP only later
+        accountId: { type: DataTypes.STRING, allowNull: true },
+        externalUserId: { type: DataTypes.STRING, allowNull: true },
+        username: { type: DataTypes.STRING, allowNull: true },
+        membershipId: { type: DataTypes.STRING, allowNull: true },
+        walletId: { type: DataTypes.STRING, allowNull: true },
+        walletAddress: { type: DataTypes.STRING, allowNull: true },
+        externalAccessToken: { type: DataTypes.TEXT, allowNull: true },
+        externalRefreshToken: { type: DataTypes.TEXT, allowNull: true },
         status: {
             type: DataTypes.ENUM('ACTIVE', 'INACTIVE', 'BANNED'),
             allowNull: false,
