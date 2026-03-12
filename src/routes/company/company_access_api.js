@@ -24,6 +24,24 @@ company_access_api.post(`${ns}/login`, async (req, res) => {
     }
 });
 
+company_access_api.post(`${ns}/verify-otp`, async (req, res) => {
+    try {
+        const { accountId, otp, phone, email } = req.body;
+        if (!phone && !email) {
+            throw new ApiError(400, "Phone/Email is required");
+        }
+        const result = await CMAuth.verifyOTP(accountId, otp, phone, email);
+        res.status(200).send(new ApiResponse(200, result, "OTP Verified Successfully"));
+    } catch (error) {
+        console.error("OTP Verification Error:", error);
+        if (error instanceof ApiError) {
+            res.status(error.statusCode).send(error);
+        } else {
+            res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+        }
+    }
+});
+
 
 company_access_api.post(`${ns}/dummy-user`, async (req, res) => {
     try {

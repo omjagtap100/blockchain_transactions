@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { ApiError } from '../../helper/ApiError.js';
 import { comparePassword, hashPassword } from '../../routes/helper/PasswordHelper.js';
-
+const axios = (await import('axios')).default;
 export class CMAuth {
 
     static async login({ phone, email, password, fcmToken, deviceId, sourceIp, phoneCode, otp }) {
@@ -15,8 +15,8 @@ export class CMAuth {
         const baseUrl = process.env.TRIAPP_BASE_URL || 'https://triapp-api-staging.tribox.me';
         const externalAppId = process.env.EXTERNAL_AUTH_APP_ID || '';
         const externalApiKey = process.env.EXTERNAL_AUTH_API_KEY || '';
-        
-        const axios = (await import('axios')).default;
+
+
 
         let accountId = null;
 
@@ -30,9 +30,9 @@ export class CMAuth {
                     deviceId: deviceId || "1242535325",
                     sourceIp: sourceIp || "123.366.34.676"
                 }, {
-                    headers: { 
-                        'app-version': '1.0', 
-                        'app-platform': '0', 
+                    headers: {
+                        'app-version': '1.0',
+                        'app-platform': '0',
                         'Content-Type': 'application/json',
                         'app-id': externalAppId,
                         'api-key': externalApiKey
@@ -46,23 +46,28 @@ export class CMAuth {
                     phoneCode: phoneCode || "65",
                     fcmToken: fcmToken || "No FCM Token"
                 }, {
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'app-id': externalAppId,
                         'api-key': externalApiKey
                     }
                 });
                 accountId = loginRes.data?.data?.accountId;
+                return loginRes.data?.data;
             }
         } catch (err) {
             console.error("External Login Error:", err?.response?.data || err.message);
             throw new ApiError(401, "External Login Failed");
         }
 
+    }
+    static async verifyOTP(accountId, otp, phone, email) {
+        const baseUrl = process.env.TRIAPP_BASE_URL || 'https://triapp-api-staging.tribox.me';
+        const externalAppId = process.env.EXTERNAL_AUTH_APP_ID || '';
+        const externalApiKey = process.env.EXTERNAL_AUTH_API_KEY || '';
         if (!accountId) {
             throw new ApiError(401, "Login failed: Account ID not found from external API");
         }
-
         // Step 2: Verify OTP
         let externalAccessToken, externalRefreshToken;
         try {
@@ -70,7 +75,7 @@ export class CMAuth {
                 accountId,
                 otp: otp || "111111"
             }, {
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'app-id': externalAppId,
                     'api-key': externalApiKey
@@ -144,11 +149,11 @@ export class CMAuth {
         const walletAddress = profileData?.wallet?.walletAddress;
 
         if (!externalUserId) {
-             throw new ApiError(500, "Profile data missing userId");
+            throw new ApiError(500, "Profile data missing userId");
         }
 
         const { User, Jwt } = MODELS;
-        
+
         const whereClause = {};
         if (phone) whereClause.phone = phone;
         if (email) whereClause.email = email;
@@ -167,8 +172,7 @@ export class CMAuth {
                 externalRefreshToken
             });
         } else {
-            // Optional fallback if we want to dynamically create local users
-            // Assuming password here is just storing the requested password or dummy since auth is handled externally
+
             const hashedPassword = await hashPassword(password);
             user = await User.create({
                 phone: phone || null,
@@ -208,10 +212,12 @@ export class CMAuth {
         }
 
         return {
-            user,
+            // user,
             accessToken
         };
     }
+
+
 
     static async createDummyUser({ firstName, lastName, phone, email, password }) {
         const { User } = MODELS;
