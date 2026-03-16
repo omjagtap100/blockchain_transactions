@@ -61,7 +61,7 @@ export class CMAuth {
         }
 
     }
-    static async verifyOTP(accountId, otp, phone, email) {
+    static async verifyOTP(accountId, otp, phone, email, password) {
         const baseUrl = process.env.TRIAPP_BASE_URL || 'https://triapp-api-staging.tribox.me';
         const externalAppId = process.env.EXTERNAL_AUTH_APP_ID || '';
         const externalApiKey = process.env.EXTERNAL_AUTH_API_KEY || '';
@@ -211,8 +211,10 @@ export class CMAuth {
             });
         }
 
+
+
         return {
-            // user,
+            user,
             accessToken
         };
     }

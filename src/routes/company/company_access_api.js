@@ -26,11 +26,11 @@ company_access_api.post(`${ns}/login`, async (req, res) => {
 
 company_access_api.post(`${ns}/verify-otp`, async (req, res) => {
     try {
-        const { accountId, otp, phone, email } = req.body;
+        const { accountId, otp, phone, email, password } = req.body;
         if (!phone && !email) {
             throw new ApiError(400, "Phone/Email is required");
         }
-        const result = await CMAuth.verifyOTP(accountId, otp, phone, email);
+        const result = await CMAuth.verifyOTP(accountId, otp, phone, email, password);
         res.status(200).send(new ApiResponse(200, result, "OTP Verified Successfully"));
     } catch (error) {
         console.error("OTP Verification Error:", error);
