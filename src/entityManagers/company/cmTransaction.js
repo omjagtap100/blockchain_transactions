@@ -16,13 +16,25 @@ export class CMTransaction {
 
             const currentBlockHeight = await this.fetchCurrentBlockHeight();
             const toBlock = currentBlockHeight || 100000000;
+            let data = {};
+            if (params.cursor == 0) {
+                data = {
+                    contractName: params.contractName,
+                    fromBlock: 0,
+                    toBlock: toBlock
 
-            const data = {
-                contractName: params.contractName,
-                fromBlock: 0,
-                toBlock: toBlock,
-                cursor: params.cursor || null
-            };
+                };
+
+            }
+            else {
+
+                data = {
+                    contractName: params.contractName,
+                    fromBlock: 0,
+                    toBlock: toBlock,
+                    cursor: params.cursor
+                };
+            }
 
             const hashkey = await HashingService.generateHash(null, data, secretKey);
 
@@ -289,12 +301,12 @@ export class CMTransaction {
 
             if (response.data && response.data.ok && response.data.data) {
                 const resData = response.data.data;
-                // Support various response shapes the API may return
+
                 contractList = resData.contracts || resData.list || resData.data || [];
                 total = resData.total ?? contractList.length;
             }
 
-            // --- Persist contracts into the contracts table ---
+
             const { Contract } = MODELS;
             let savedCount = 0;
 

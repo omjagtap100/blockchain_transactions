@@ -17,11 +17,33 @@ async function login() {
     console.log('[login] Authenticating with backend...');
     const response = await axios.post(
         `${BASE_URL}/company/access/login`,
-        { email: BACKEND_EMAIL, password: BACKEND_PASSWORD }
+        {
+            "phone": process.env.BACKEND_PHONE,
+            password: BACKEND_PASSWORD,
+            "phoneCode": process.env.BACKEND_PHONE_CODE
+        }
+    );
+    const accountId = response.data?.data?.accountId;
+    if (!accountId) throw new Error('Login succeeded but no accountId was returned.');
+    console.log('[login] Login successful. Account ID:', accountId);
+    return accountId;
+}
+
+async function verifyOtp(accountId) {
+    console.log('[verifyOtp] Verifying OTP...');
+    const response = await axios.post(
+        `${BASE_URL}/company/access/verify-otp`,
+        {
+            accountId,
+            otp: process.env.BACKEND_OTP,
+            phone: process.env.BACKEND_PHONE,
+            password: BACKEND_PASSWORD
+        },
+        { headers: { 'Authorization': headers().Authorization, 'Content-Type': 'application/json' } }
     );
     jwtToken = response.data?.data?.accessToken;
-    if (!jwtToken) throw new Error('Login succeeded but no accessToken was returned.');
-    console.log('[login] Authentication successful. Token acquired.');
+    if (!jwtToken) throw new Error('OTP Verification succeeded but no accessToken was returned.');
+    console.log('[verifyOtp] OTP Verification successful. Token acquired.');
 }
 
 async function withAuth(fn) {
@@ -30,7 +52,8 @@ async function withAuth(fn) {
     } catch (error) {
         if (error.response?.status === 401) {
             console.warn('[withAuth] Token expired or invalid. Re-authenticating...');
-            await login();
+            const accountId = await login();
+            await verifyOtp(accountId);
             return await fn();
         }
         throw error;
@@ -139,7 +162,8 @@ const start = async () => {
     console.log(`[tridentity-contract-fetching] Starting...`);
     console.log(`Backend URL : ${BASE_URL}`);
 
-    await login();
+    const accountId = await login();
+    await verifyOtp(accountId);
 
     await runSync();
 
