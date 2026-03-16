@@ -143,6 +143,27 @@ company_transaction_api.get(`${ns}/search`, company_middleware, async (req, res)
     }
 });
 
+company_transaction_api.get(`${ns}/user-scan`, company_middleware, async (req, res) => {
+    try {
+        const { userAddress, limit, cursor } = req.query;
+
+        if (!userAddress) {
+            return res.status(400).send(new ApiError(400, "userAddress is required"));
+        }
+
+        const result = await CMTransaction.fetchUserTransactionsScan({
+            userAddress,
+            limit: limit ? parseInt(limit) : 50,
+            cursor: cursor ? parseInt(cursor) : null
+        });
+
+        res.status(200).send(new ApiResponse(200, result, "User Transactions Fetched Successfully from Scan"));
+    } catch (error) {
+        console.error("User Transactions Scan API Error:", error);
+        res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+    }
+});
+
 company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) => {
     try {
         const { txId } = req.params;
@@ -163,27 +184,27 @@ company_transaction_api.get(`${ns}/:txId`, company_middleware, async (req, res) 
     }
 });
 
-// /**
-//  * POST /company/transactions/generate-hash
-//  * Generates a hash key using the HashingService and the external secret key.
-//  * Used for testing external gateway APIs.
-//  */
-// company_transaction_api.post(`${ns}/generate-hash`, company_middleware, async (req, res) => {
-//     try {
-//         const { data } = req.body || {};
-//         const secretKey = process.env.EXTERNAL_SECRET_KEY;
+/**
+ * POST /company/transactions/generate-hash
+ * Generates a hash key using the HashingService and the external secret key.
+ * Used for testing external gateway APIs.
+ */
+company_transaction_api.post(`${ns}/generate-hash`, company_middleware, async (req, res) => {
+    try {
+        const { data } = req.body || {};
+        const secretKey = process.env.EXTERNAL_SECRET_KEY;
 
-//         if (!data) {
-//             return res.status(400).send(new ApiError(400, "data field is required in request body"));
-//         }
+        if (!data) {
+            return res.status(400).send(new ApiError(400, "data field is required in request body"));
+        }
 
-//         const { HashingService } = await import('../../helper/HashingService.js');
-//         const hashkey = await HashingService.generateHash(null, data, secretKey);
+        const { HashingService } = await import('../../helper/HashingService.js');
+        const hashkey = await HashingService.generateHash(null, data, secretKey);
 
-//         res.status(200).send(new ApiResponse(200, { hashkey }, "Hash Key Generated Successfully"));
-//     } catch (error) {
-//         console.error("Generate Hash Error:", error);
-//         res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
-//     }
-// });
+        res.status(200).send(new ApiResponse(200, { hashkey }, "Hash Key Generated Successfully"));
+    } catch (error) {
+        console.error("Generate Hash Error:", error);
+        res.status(500).send(new ApiError(500, "Internal Server Error", [error.message]));
+    }
+});
 

@@ -63,6 +63,45 @@ export class CMTransaction {
         }
     }
 
+    static async fetchUserTransactionsScan(params) {
+        try {
+            const url = process.env.EXTERNAL_USER_TRANSACTIONS_SCAN_URL;
+            const secretKey = process.env.EXTERNAL_SECRET_KEY;
+            const appid = process.env.EXTERNAL_APP_ID;
+            const sid = process.env.EXTERNAL_SID;
+
+            const data = {
+                userAddress: params.userAddress,
+                limit: params.limit || 50,
+                cursor: params.cursor || null
+            };
+
+            const hashkey = await HashingService.generateHash(null, data, secretKey);
+
+            const payload = {
+                data,
+                hashkey
+            };
+
+            const headers = {
+                'appid': appid,
+                'sid': sid,
+                'Content-Type': 'application/json'
+            };
+
+            const response = await axios.post(url, payload, { headers });
+
+            if (response.data && response.data.ok && response.data.data) {
+                return response.data.data;
+            }
+            return { transactions: [], nextCursor: null, message: "No data found or error in response" };
+
+        } catch (error) {
+            console.error('Error fetching user transactions scan:', error.message);
+            throw error;
+        }
+    }
+
     static async fetchContractLogs(params) {
         try {
             const url = process.env.EXTERNAL_CONTRACT_LOGS_URL;
