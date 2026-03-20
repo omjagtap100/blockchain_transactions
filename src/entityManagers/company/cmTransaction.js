@@ -14,26 +14,13 @@ export class CMTransaction {
             const sid = process.env.EXTERNAL_SID;
 
 
-            const currentBlockHeight = await this.fetchCurrentBlockHeight();
-            const toBlock = currentBlockHeight || 100000000;
-            let data = {};
-            if (params.cursor == 0) {
-                data = {
-                    contractName: params.contractName,
-                    fromBlock: 0,
-                    toBlock: toBlock
+            let data = {
+                contractName: params.contractName,
+                limit: params.limit || 100
+            };
 
-                };
-
-            }
-            else {
-
-                data = {
-                    contractName: params.contractName,
-                    fromBlock: 0,
-                    toBlock: toBlock,
-                    cursor: params.cursor
-                };
+            if (params.cursor && params.cursor !== 0 && params.cursor !== '0') {
+                data.cursor = params.cursor;
             }
 
             const hashkey = await HashingService.generateHash(null, data, secretKey);
@@ -88,6 +75,7 @@ export class CMTransaction {
                 'sid': sid,
                 'Content-Type': 'application/json'
             };
+
 
             const response = await axios.post(url, payload, { headers });
 
