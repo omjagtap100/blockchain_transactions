@@ -1,12 +1,12 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs "node18" // Ensure this tool name matches your Jenkins Global Tool Configuration
+    docker {
+        image 'node:18'
     }
-
     stages {
         stage('Checkout') {
+            
             steps {
                 checkout scm
             }
