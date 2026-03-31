@@ -2,41 +2,49 @@ pipeline {
     agent any
 
     tools {
-        nodejs "node18"
+        nodejs "node18" // Ensure this tool name matches your Jenkins Global Tool Configuration
     }
 
     stages {
-
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/omjagtap100/triapp_blockchain.git'
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
         stage('Database Migration') {
             steps {
-                sh 'npm run migrate'
+                bat 'npm run migrate'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'npm test'
+                bat 'npm test'
             }
         }
 
-        stage('Start Server') {
+        stage('Deploy / Restart') {
             steps {
-                // Ensure pm2 handles both the main API and the cron/fetching service
-                sh 'pm2 restart company-api || pm2 start src/company.js --name "company-api"'
-                sh 'pm2 restart fetch-cron || pm2 start server.js --name "fetch-cron"'
+             
+                bat 'pm2 restart tridentity-api || pm2 start src/company.js --name "tridentity-api"'
+                bat 'pm2 restart tridentity-cron || pm2 start server.js --name "tridentity-cron"'
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Build completed.'
+        }
+        failure {
+            echo 'Build failed! Check the logs.'
         }
     }
 }
