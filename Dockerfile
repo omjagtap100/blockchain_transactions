@@ -1,9 +1,21 @@
-FROM node:18-alpine AS development
+FROM node:20-alpine
+
 WORKDIR /usr/src/app
-COPY --chown=node:node package*.json ./
-RUN npm i
-COPY --chown=node:node . .
-EXPOSE 3001
-USER node
-ENV NODE_ENV sandbox
-CMD ["npm", "run", "start:prod"]
+
+# Copy package files first for better layering
+COPY package*.json ./
+
+# Install production dependencies
+RUN npm install --omit=dev
+
+# Copy the rest of the application
+COPY . .
+
+# Expose the API port (Matching COMPANY_PORT in .env)
+EXPOSE 5500
+
+# Set environment variables
+ENV NODE_ENV=production
+
+# Start the application (src/company.js)
+CMD ["npm", "start"]
