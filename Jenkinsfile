@@ -35,12 +35,14 @@ pipeline {
         stage('Login & Push to Docker Hub') {
             steps {
                 script {
-                    echo 'Logging in and pushing to Docker Hub...'
-                    // This securely uses your token stored in Jenkins credentials
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS_ID) {
-                        // Tag the image for Docker Hub
+                    echo 'Logging in to Docker Hub...'
+                    // Use standard Jenkins credentials binding
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDS_ID, passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
+                        // Securely login using stdin
+                        bat "echo %DOCKER_HUB_PASSWORD% | docker login -u %DOCKER_HUB_USERNAME% --password-stdin"
+                        
+                        echo 'Tagging and pushing image...'
                         bat "docker tag ${IMAGE_NAME}:latest ${DOCKER_IMAGE_PATH}:latest"
-                        // Push the tagged image
                         bat "docker push ${DOCKER_IMAGE_PATH}:latest"
                     }
                 }
@@ -64,7 +66,6 @@ pipeline {
             steps {
                 script {
                     echo 'Starting new container from the fresh build...'
-                    // Run the container on the host machine
                     bat "docker run -d --name ${CONTAINER_NAME} --env-file .env -p ${PORT}:${PORT} ${IMAGE_NAME}:latest"
                 }
             }
