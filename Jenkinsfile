@@ -1,12 +1,12 @@
 pipeline {
-    agent any
-{
-    docker {
-        image 'node:18'
-    }}
+    agent {
+        docker {
+            image 'node:lts-windows'
+        }
+    }
+
     stages {
         stage('Checkout') {
-            
             steps {
                 checkout scm
             }
@@ -30,21 +30,20 @@ pipeline {
             }
         }
 
-        stage('Deploy / Restart') {
+        stage('Build Info') {
             steps {
-             
-                bat 'pm2 restart tridentity-api || pm2 start src/company.js --name "tridentity-api"'
-                bat 'pm2 restart tridentity-cron || pm2 start server.js --name "tridentity-cron"'
+                bat 'node -v'
+                bat 'npm -v'
             }
         }
     }
 
     post {
         always {
-            echo 'Build completed.'
+            echo 'Build completed in Docker (Windows container).'
         }
         failure {
-            echo 'Build failed! Check the logs.'
+            echo 'Build failed! Check logs.'
         }
     }
 }
