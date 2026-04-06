@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tridentity-backend
+spec:
+  replicas: 2                  # Number of pods to run
+  selector:
+    matchLabels:
+      app: tridentity-backend  # Connects Deployment to pods
+  template:
+    metadata:
+      labels:
+        app: tridentity-backend
+    spec:
+      containers:
+      - name: backend
+        image: omjagtap3304/tridentity-backend:latest
+        ports:
+        - containerPort: 5500
