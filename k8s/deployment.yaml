@@ -17,3 +17,6 @@ spec:
         image: omjagtap3304/tridentity-backend:latest
         ports:
         - containerPort: 5500
+        envFrom:
+        - configMapRef:
+            name: app-config
