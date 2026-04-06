@@ -17,5 +17,7 @@ EXPOSE 5500
 # Set environment variables
 ENV NODE_ENV=production
 
+RUN echo $DB_HOST
+
 # Start the application (src/company.js)
 CMD ["npm", "start"]

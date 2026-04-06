@@ -4,7 +4,7 @@ module.exports = {
     up: async (queryInterface, Sequelize) => {
 
 
-        await queryInterface.addColumn('Contracts', 'cursor', {
+        await queryInterface.addColumn('contracts', 'cursor', {
             type: Sequelize.BIGINT,
             allowNull: true,
             defaultValue: 0
@@ -12,6 +12,6 @@ module.exports = {
     },
 
     down: async (queryInterface, Sequelize) => {
-        await queryInterface.removeColumn('Contracts', 'cursor');
+        await queryInterface.removeColumn('contracts', 'cursor');
     }
 };
