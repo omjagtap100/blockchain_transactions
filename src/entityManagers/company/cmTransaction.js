@@ -3,6 +3,17 @@ import { ApiError } from '../../helper/ApiError.js';
 import { HashingService } from '../../helper/HashingService.js';
 import axios from 'axios';
 
+const CONTRACT_NAME_MAPPING = {
+    Identity: 'TriApp',
+    Membership: 'TriApp',
+    MembershipAdminMerchant: 'TriApp',
+    LoyaltyPoint2: 'TriApp',
+    Event: 'TriEvent',
+    Certificate: 'TriEvent',
+    Voucher: 'TriEvent',
+    Collectible: 'TriApp'
+};
+
 export class CMTransaction {
 
 
@@ -438,7 +449,7 @@ export class CMTransaction {
     }
 
     static async getTransactions({ page = 1, pageSize = 10, contractName }) {
-        const { Transaction } = MODELS;
+        const { Transaction, Contract } = MODELS;
         const limit = parseInt(pageSize);
         const offset = (parseInt(page) - 1) * limit;
         const whereClause = {};
@@ -449,14 +460,39 @@ export class CMTransaction {
 
         const { count, rows } = await Transaction.findAndCountAll({
             where: whereClause,
+            include: [
+                {
+                    model: Contract,
+                    as: 'contract',
+                    attributes: ['name', 'address'],
+                    required: false
+                }
+            ],
             limit,
             offset,
             order: [['timestamp', 'DESC']]
         });
 
+        const mappedItems = rows.map((row) => {
+            const tx = row.toJSON();
+            const contractRecord = tx.contract || null;
+            const originalContractName = contractRecord?.name || null;
+            const mappedContractName = originalContractName
+                ? (CONTRACT_NAME_MAPPING[originalContractName] || originalContractName)
+                : null;
+            const contractAddress = contractRecord?.address || tx.contractName || null;
+
+            return {
+                ...tx,
+                contractName: mappedContractName || tx.contractName,
+                contractAddress,
+                contractOriginalName: originalContractName
+            };
+        });
+
         return {
             totalItems: count,
-            items: rows,
+            items: mappedItems,
             totalPages: Math.ceil(count / limit),
             currentPage: parseInt(page)
         };

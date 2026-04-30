@@ -3,10 +3,10 @@ kind: Deployment
 metadata:
   name: tridentity-backend
 spec:
-  replicas: 2                  # Number of pods to run
+  replicas: 2
   selector:
     matchLabels:
-      app: tridentity-backend  # Connects Deployment to pods
+      app: tridentity-backend
   template:
     metadata:
       labels:
